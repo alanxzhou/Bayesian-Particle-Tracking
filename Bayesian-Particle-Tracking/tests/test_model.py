@@ -3,7 +3,7 @@ from unittest import TestCase
 import model
 
 """
-Not really sure what do with this test.
+Not really sure what to test / how to test things. This needs to be updated.
 """
 
 class TestModel(TestCase):
