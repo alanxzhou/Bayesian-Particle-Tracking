@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.random import normal
+from numpy.random import uniform
 import matplotlib as plt
 import scipy
 
@@ -7,19 +8,20 @@ def trajectory(nsteps, sigma, mu, a, T = 300, nwalkers = 1, center = 0, tau = 1)
 	"""
 	This function provides the trajectory for a 3D random walk of n=nsteps steps.
 	"""
-
-    kb = 1.38*10**(-23)
-    D = (kb*T)/(6*np.pi*mu*a)
-    r = abs(normal(center, np.sqrt(sigma1**2+sigma**2), nsteps))/2
-    theta = uniform(0,np.pi,nsteps)
-    phi = uniform(0,2*np.pi,nsteps)
-    x = r*np.sin(theta)*np.cos(phi)
-    y = r*np.sin(theta)*np.sin(phi)
-    z = r*np.cos(theta)
-    traj_x = np.cumsum(x)
-    traj_y = np.cumsum(y)
-    traj_z = np.cumsum(z)
-    return(traj_x, traj_y, traj_z)
+	
+	kb = 1.38*10**(-23)
+	D = (kb*T)/(6*np.pi*mu*a)
+	sigma1 = np.sqrt(3*D*tau)
+	r = abs(normal(center, np.sqrt(sigma1**2+sigma**2), nsteps))/2
+	theta = uniform(0,np.pi,nsteps)
+	phi = uniform(0,2*np.pi,nsteps)
+	x = r*np.sin(theta)*np.cos(phi)
+	y = r*np.sin(theta)*np.sin(phi)
+	z = r*np.cos(theta)
+	traj_x = np.cumsum(x)
+	traj_y = np.cumsum(y)
+	traj_z = np.cumsum(z)
+	return(traj_x, traj_y, traj_z)
 
 def model(sigma, mu, a, T = 300, center = 0, tau = 1):
 	"""
