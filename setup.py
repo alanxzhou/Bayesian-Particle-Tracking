@@ -9,4 +9,6 @@ setup(name='bayesian-particle-tracking',
       license='Harvard',
       packages=['Bayesian-Particle-Tracking'],
       install_requires=['numpy', 'matplotlib', 'scipy'],
+      test_suite='nose.collector',
+      tests_require=['nose'],
       zip_safe=False)
