@@ -7,7 +7,7 @@ import scipy
 def model(nsteps, sigma, mu, a, T = 300, nwalkers = 1, center = 0, tau = 1):
 	"""
 	This function provides the trajectory for a 3D diffusion process.
-	Returns trajectories in (x,y,z) coordinates as column vectors
+	Returns trajectories in (x,y,z) coordiantes as column vectors
 
 	Parameters:
 		nsteps: number of steps to take
