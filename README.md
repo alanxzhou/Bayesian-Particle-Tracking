@@ -4,13 +4,13 @@ This package is designed to allow bayesian analysis of particle tracking data. S
 
 Parameters in determining trajectory of a 3D Diffusion Process:
 
-$\sigma$: uncertainty in measurement on position
+sigma: uncertainty in measurement on position
 
-$\mu$: dynamic viscosity of the medium
+mu: dynamic viscosity of the medium
 
-$\a$: radius of the particle
+a: radius of the particle
 
-$T$: temperature
+T: temperature
 
 Future plans:
 Develop a model that has dependencies on the parameters of the raw data (particle tracking images)
