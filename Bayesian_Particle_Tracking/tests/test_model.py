@@ -1,12 +1,21 @@
+import unittest
 from unittest import TestCase
-
-import model
+from Bayesian_Particle_Tracking import model
+from Bayesian_Particle_Tracking import io
 
 """
-Not really sure what to test / how to test things. This needs to be updated.
+Unit tests for model
 """
 
 class TestModel(TestCase):
-	def model_is_number(self):
-		n = model.model(1, 1, 1, T = 300, center = 0, tau = 1)
-		self.assertTrue(isinstance(n, float))
+	def test_model_is_number(self):
+		n = list(model.generator(1, 1, 1, 1, [0,0,0],T = 300, center = 0, tau = 1))
+		self.assertTrue(isinstance(n, list))
+
+	def test_model_works(self):
+		testdata = io.input_data
+		self.assertTrue(isinstance(testdata.n, int))
+		self.assertTrue(len(testdata.data[0])==4)
+
+if __name__ == '__main__':
+	unittest.main()

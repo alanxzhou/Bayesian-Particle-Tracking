@@ -2,8 +2,10 @@ import numpy as np
 from numpy.random import normal
 from numpy.random import uniform
 import scipy
+from Bayesian_Particle_Tracking.printable import Printable
+from Bayesian_Particle_Tracking import prior
 
-def model(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, center = 0, tau = 1):
+def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, center = 0, tau = 1):
 	"""
 	This function provides the trajectory for a 3D diffusion process.
 	Returns trajectories in (x,y,z) coordinates as column vectors
@@ -24,7 +26,7 @@ def model(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, cente
 	x_start = normal(initial_coordinate[0],sigma*np.sqrt(3))
 	y_start = normal(initial_coordinate[1],sigma*np.sqrt(3))
 	z_start = normal(initial_coordinate[2],sigma*np.sqrt(3))
-
+  
 	kb = 1.38*10**(-23)
 	D = (kb*T)/(6*np.pi*mu*a)
 	sigma1 = np.sqrt(3*D*tau)
@@ -39,7 +41,8 @@ def model(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, cente
 	traj_x = np.cumsum(x) + x_start
 	traj_y = np.cumsum(y) + y_start
 	traj_z = np.cumsum(z) + z_start
-	return(np.array((traj_x, traj_y, traj_z)).T)
+	sigmaarray = np.ones(len(traj_x))*sigma
+	return(np.array((traj_x, traj_y, traj_z, sigmaarray)).T)
 
 def likelihood(data, sigma, mu, a, T = 300, center = 0, tau = 1):
 	"""
@@ -78,6 +81,34 @@ def likelihood(data, sigma, mu, a, T = 300, center = 0, tau = 1):
 	x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
 	distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
 
+	#This assumes a true initial coordinate without measurement uncertainty
 	return (2*np.pi)**(-len(data)/2)*np.prod((sigma1**2+sigma**2)**(-1/2))*np.exp((-((distance)**2)/(2*(sigma1**2+sigma**2))).sum())
 
+class diffusion(Printable):
+    '''
+    Contains data and relevent parameters for a 3-D Diffusion Process
 
+    Attributes
+    ----------
+    data: size 3 x n array
+        positional data input in cartesian coordinates (x,y,z)
+    sigma: nonzero float
+        specifies measurement uncertainty on measurement of particle position
+    n : integer
+        number of steps taken in diffusion process
+    position: length 3 listlike
+        initial position
+    nwalkers: integer
+        number of particles being tracked. TO BE IMPLEMENTED
+    '''
+    def __init__(self, data, nwalkers = 1):
+        self.data = data
+        self.n = len(data)
+        self.position = data[0]
+        self.x = data[:,0]
+        self.y = data[:,1]
+        self.z = data[:,2]
+        self.sigma = data[:,3]
+    
+    def translate(self,offset):
+        return diffusion(data+np.array(offset))
