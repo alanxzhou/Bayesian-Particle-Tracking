@@ -165,6 +165,10 @@ def log_likelihood(theta, diffusion_object, tau = 1):
 def log_posterior(theta, diffusion_object):
     return log_prior(theta) + log_likelihood(theta, diffusion_object)
 
+"""
+The following functions are defined such that T is taken as a given number rather than an uknown parameter.
+"""
+
 def log_prior2(theta):
     mu, a = theta
     mu_prior = JeffreysPrior(10**(-6), 10**(-2)).lnprob(mu)
