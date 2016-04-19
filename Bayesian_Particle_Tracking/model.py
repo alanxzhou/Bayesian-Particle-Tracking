@@ -3,7 +3,8 @@ from numpy.random import normal
 from numpy.random import uniform
 import scipy
 from Bayesian_Particle_Tracking.printable import Printable
-from Bayesian_Particle_Tracking import prior
+from Bayesian_Particle_Tracking.prior import JeffreysPrior
+from Bayesian_Particle_Tracking.prior import UniformPrior
 
 def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, center = 0, tau = 1):
 	"""
@@ -112,3 +113,104 @@ class diffusion(Printable):
     
     def translate(self,offset):
         return diffusion(data+np.array(offset))
+
+def log_prior(theta):
+    mu, T, a = theta
+    mu_prior = JeffreysPrior(10**(-6), 10**(-2)).lnprob(mu)
+    T_prior = UniformPrior(273, 400).lnprob(T)
+    a_prior = JeffreysPrior(10**(-10), 10**(-6)).lnprob(a)
+    if mu > 0 and T > 0 and a > 0:
+        return mu_prior+T_prior+a_prior
+    else:
+        return -np.inf
+
+def log_likelihood(theta, diffusion_object, tau = 1):
+    mu, T, a = theta
+    data = diffusion_object.data
+    sigma = diffusion_object.sigma
+    
+    sigma = list(sigma)
+    del sigma[0]
+    sigma = np.array(sigma)
+    
+    kb = 1.38*10**(-23)
+    D = (kb*T)/(6*np.pi*mu*a)
+    if D <= 0:
+        return -np.inf
+    sigma1 = np.sqrt(3*D*tau)
+    
+    #Turn data into displacements instead of positions
+    data = data-data[0]
+
+    #This should give us the delta x_{i,i-1}. point_before is just the data list minus the last element.
+    #data_points is the data list minus the first element.
+    #point_before is the data list minus the last element.
+    #distance is the measurement of the distance between two consecutive points in the series.
+
+    point_before = list(data)
+    del point_before[len(point_before)-1]
+    point_before = np.array(point_before)
+    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
+
+    data_points = list(data)
+    del data_points[0]
+    data_points = np.array(data_points)
+    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
+    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
+
+    #Should be correct with the correct log properties
+    result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((sigma1**2+sigma**2)**(-1/2)))+(-((distance)**2)/(2*(sigma1**2+sigma**2))).sum()
+    return result
+    
+def log_posterior(theta, diffusion_object):
+    return log_prior(theta) + log_likelihood(theta, diffusion_object)
+
+def log_prior2(theta):
+    mu, a = theta
+    mu_prior = JeffreysPrior(10**(-6), 10**(-2)).lnprob(mu)
+    a_prior = JeffreysPrior(10**(-10), 10**(-6)).lnprob(a)
+    if mu > 0 and a > 0:
+        return mu_prior+a_prior
+    else:
+        return -np.inf
+
+def log_likelihood2(theta, diffusion_object, tau = 1, T = 300):
+    mu, a = theta
+    data = diffusion_object.data
+    sigma = diffusion_object.sigma
+    
+    sigma = list(sigma)
+    del sigma[0]
+    sigma = np.array(sigma)
+    
+    kb = 1.38*10**(-23)
+    D = (kb*T)/(6*np.pi*mu*a)
+    if D <= 0:
+        return -np.inf
+    sigma1 = np.sqrt(3*D*tau)
+    
+    #Turn data into displacements instead of positions
+    data = data-data[0]
+
+    #This should give us the delta x_{i,i-1}. point_before is just the data list minus the last element.
+    #data_points is the data list minus the first element.
+    #point_before is the data list minus the last element.
+    #distance is the measurement of the distance between two consecutive points in the series.
+
+    point_before = list(data)
+    del point_before[len(point_before)-1]
+    point_before = np.array(point_before)
+    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
+
+    data_points = list(data)
+    del data_points[0]
+    data_points = np.array(data_points)
+    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
+    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
+
+    #Should be correct with the correct log properties
+    result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((sigma1**2+sigma**2)**(-1/2)))+(-((distance)**2)/(2*(sigma1**2+sigma**2))).sum()
+    return result
+    
+def log_posterior2(theta, diffusion_object):
+    return log_prior2(theta) + log_likelihood2(theta, diffusion_object)

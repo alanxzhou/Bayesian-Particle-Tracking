@@ -1,7 +1,7 @@
 #Mostly from Tom Dimiduk at https://github.com/p201-sp2016/package-example/blob/master/package_example/prior.py
 
-from Bayesian_Particle_Tracking.printable import Printable
 import numpy as np
+from Bayesian_Particle_Tracking.printable import Printable
 
 class UniformPrior(Printable):
     def __init__(self, lower_bound, upper_bound):
@@ -21,6 +21,6 @@ class JeffreysPrior(Printable):
 
 	def lnprob(self, p):
 		if self.lower_bound < p < self.upper_bound:
-			return np.log(1/(p*np.log(self.upperbound/self.lower_bound)))
+			return np.log(1/(p*np.log(self.upper_bound/self.lower_bound)))
 		else:
 			return -np.inf

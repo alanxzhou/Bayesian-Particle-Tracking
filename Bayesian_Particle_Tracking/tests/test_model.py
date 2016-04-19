@@ -1,7 +1,8 @@
 import unittest
+import numpy as np
 from unittest import TestCase
 from Bayesian_Particle_Tracking import model
-from Bayesian_Particle_Tracking import io
+from Bayesian_Particle_Tracking import io 
 
 """
 Unit tests for model
@@ -12,10 +13,15 @@ class TestModel(TestCase):
 		n = list(model.generator(1, 1, 1, 1, [0,0,0],T = 300, center = 0, tau = 1))
 		self.assertTrue(isinstance(n, list))
 
-	def test_model_works(self):
+	def test_model_object_works(self):
 		testdata = io.input_data
 		self.assertTrue(isinstance(testdata.n, int))
 		self.assertTrue(len(testdata.data[0])==4)
+
+	def test_model_positive_parameters(self):
+		theta = (10**(-4), 300, 10**(-8))
+		self.assertTrue(model.log_prior(theta) != -np.inf)
+		self.assertTrue(model.log_likelihood(theta, io.input_data) != -np.inf)
 
 if __name__ == '__main__':
 	unittest.main()
