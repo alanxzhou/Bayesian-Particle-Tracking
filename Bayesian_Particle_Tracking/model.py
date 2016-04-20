@@ -31,7 +31,7 @@ def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, c
 	kb = 1.38*10**(-23)
 	D = (kb*T)/(6*np.pi*mu*a)
 	sigma1 = np.sqrt(3*D*tau)
-	r = abs(normal(center, sigma1, nsteps))/2
+	r = normal(center, sigma1, nsteps)
 	theta = uniform(0,np.pi,nsteps)
 	phi = uniform(0,2*np.pi,nsteps)
 	#Spherical to Cartesian Coordinates
