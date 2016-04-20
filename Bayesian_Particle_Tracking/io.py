@@ -1,12 +1,6 @@
-from Bayesian_Particle_Tracking import model
+from Bayesian_Particle_Tracking import model, generate_data
 import numpy as np
 import os
-
-#T=300, mu = 10^-4, a = 10^-8
-#=> D = 2.19*10^-10
-# TODO: FIXME: You generally don't want to be running actual computations in files that are imported. Move this data generation to a seperate script you run explicitly
-data = model.generator(1000,10**(-8),10**(-4),10**(-8),[0,0,0], T=300)
-np.save('test_data', data)
 
 def get_example_data_file_path(filename, data_dir='example_data'):
     # __file__ is the location of the source file currently in use (so
