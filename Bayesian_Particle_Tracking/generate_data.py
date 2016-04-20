@@ -4,12 +4,16 @@ from numpy.random import uniform
 import scipy
 import os
 
-#T=300, mu = 10^-4, a = 10^-8
-#=> D = 2.19*10^-10
+"""
+Generates data to test against the model.
+
+Original test data created with the following parameters:
+nsteps = 1000, T = 300, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0)
+(D = 2.19*10^-10)
+"""
+
 def data_generation(a, b, c, d, e, f):
     
-    #FIX ME: I didn't actually know what the input parameters are called, so I just labeled them a-f. You should change this to reflect what the parameters actually are. This will also make the function easier to read and understand.
-
     data = generator(a, b, c, d, e, f)
     np.save('test_data', data)
 
