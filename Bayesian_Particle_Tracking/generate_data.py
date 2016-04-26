@@ -8,17 +8,17 @@ import os
 Generates data to test against the model.
 
 Original test data created with the following parameters:
-nsteps = 1000, T = 300, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0)
+nsteps = 1000, sigma = 10^-8, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0), T = 300
 (D = 2.19*10^-10)
 """
 
-def data_generation(a, b, c, d, e, f):
+def data_generation(a, b, c, d, e, tau = 1):
     
-    data = generator(a, b, c, d, e, f)
+    data = generator(a, b, c, d, e, tau)
     np.save('test_data', data)
 
 
-def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, center = 0, tau = 1):
+def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, tau = 1):
     """
     This function provides the trajectory for a 3D diffusion process.
     Returns trajectories in (x,y,z) coordinates as column vectors
@@ -42,8 +42,8 @@ def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, c
                     
     kb = 1.38*10**(-23)
     D = (kb*T)/(6*np.pi*mu*a)
-    sigma1 = np.sqrt(3*D*tau)
-    r = normal(center, sigma1, nsteps)
+    sigma1 = np.sqrt(6*D*tau)
+    r = normal(0, sigma1, nsteps)
     theta = uniform(0,np.pi,nsteps)
     phi = uniform(0,2*np.pi,nsteps)
     #Spherical to Cartesian Coordinates

@@ -20,8 +20,8 @@ class TestModel(TestCase):
         self.assertTrue(len(testdata.data[0])==4)
 
     def test_model_positive_parameters(self):
-        theta = (10**(-4), 300, 10**(-8))
-        self.assertTrue(model.log_prior(theta) != -np.inf)
+        theta = (2*10**(-10))
+        self.assertTrue(model.log_prior(theta) !=  -np.inf)
         self.assertTrue(model.log_likelihood(theta, io.input_data) != -np.inf)
 
 if __name__ == '__main__':

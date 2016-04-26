@@ -6,46 +6,6 @@ from Bayesian_Particle_Tracking.printable import Printable
 from Bayesian_Particle_Tracking.prior import JeffreysPrior
 from Bayesian_Particle_Tracking.prior import UniformPrior
 
-def likelihood(data, sigma, mu, a, T = 300, center = 0, tau = 1):
-    """
-    Likelihood function for 3D diffusion process of a single particle.
-
-    Parameters:
-        data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
-            where traj_x,traj_y,traj_z are the coordinate positions of the particle
-        sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
-        mu: viscosity of medium
-        a: radius of particle
-        T: temperature
-        tau: time constant (default at 1s)
-        D: diffusion constant; function of a, mu, T
-    """
-    kb = 1.38*10**(-23)
-    D = (kb*T)/(6*np.pi*mu*a)
-    sigma1 = np.sqrt(3*D*tau)
-
-    #Turn data into displacements instead of positions
-    data = data-data[0]
-
-    #This should give us the delta x_{i,i-1}. point_before is just the data list minus the last element.
-    #data_points is the data list minus the first element.
-    #point_before is the data list minus the last element.
-    #distance is the measurement of the distance between two consecutive points in the series.
-
-    point_before = list(data)
-    del point_before[len(point_before)-1]
-    point_before = np.array(point_before)
-    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
-
-    data_points = list(data)
-    del data_points[0]
-    data_points = np.array(data_points)
-    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
-    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
-
-    #This assumes a true initial coordinate without measurement uncertainty
-    return (2*np.pi)**(-len(data)/2)*np.prod((sigma1**2+sigma**2)**(-1/2))*np.exp((-((distance)**2)/(2*(sigma1**2+sigma**2))).sum())
-
 class diffusion(Printable):
     '''
     Contains data and relevent parameters for a 3-D Diffusion Process
@@ -76,17 +36,19 @@ class diffusion(Printable):
         return diffusion(data+np.array(offset))
 
 def log_prior(theta):
-    mu, T, a = theta
-    mu_prior = JeffreysPrior(10**(-6), 10**(-2)).lnprob(mu)
-    T_prior = UniformPrior(273, 400).lnprob(T)
-    a_prior = JeffreysPrior(10**(-10), 10**(-6)).lnprob(a)
-    if mu > 0 and T > 0 and a > 0:
-        return mu_prior+T_prior+a_prior
+    D = theta
+    D_prior = JeffreysPrior(10**(-12), 10**(-8)).lnprob(D)
+    if D > 0:
+        return D_prior
     else:
         return -np.inf
 
 def log_likelihood(theta, diffusion_object, tau = 1):
-    mu, T, a = theta
+    D = theta
+    
+    if D <= 0:
+        return -np.inf
+    
     data = diffusion_object.data
     sigma = diffusion_object.sigma
     
@@ -94,15 +56,11 @@ def log_likelihood(theta, diffusion_object, tau = 1):
     del sigma[0]
     sigma = np.array(sigma)
     
-    kb = 1.38*10**(-23)
-    D = (kb*T)/(6*np.pi*mu*a)
-    if D <= 0:
-        return -np.inf
-    sigma1 = np.sqrt(3*D*tau)
+    sigma1 = np.sqrt(6*D*tau)
     
     #Turn data into displacements instead of positions
     data = data-data[0]
-
+    
     #This should give us the delta x_{i,i-1}. point_before is just the data list minus the last element.
     #data_points is the data list minus the first element.
     #point_before is the data list minus the last element.
@@ -127,23 +85,44 @@ def log_posterior(theta, diffusion_object):
     return log_prior(theta) + log_likelihood(theta, diffusion_object)
 
 """
-The following functions are defined such that T is taken as a given number rather than an uknown parameter.
+The following functions are copies of the above except now they have as parameters mu, T, and a (instead of D) given by:
+    mu: dynamic viscosity of medium in Pa*s
+    T: temperature in K 
+    a: radius of particle in m 
+In general, two out of three parameters are known, and so it is best to solve for D with the above functions and then calculate for the third parameter.
+However, if one wants to solve for one of the parameters specifically, they can use the following:
 """
 
-def log_prior2(theta):
-    mu, a = theta
+def log_prior3(theta):
+    mu, T, a = theta
     mu_prior = JeffreysPrior(10**(-6), 10**(-2)).lnprob(mu)
+    T_prior = UniformPrior(273, 400).lnprob(T)
     a_prior = JeffreysPrior(10**(-10), 10**(-6)).lnprob(a)
-    if mu > 0 and a > 0:
-        return mu_prior+a_prior
+    if mu > 0 and T > 0 and a > 0:
+        return mu_prior+T_prior+a_prior
     else:
         return -np.inf
 
-def log_likelihood2(theta, diffusion_object, tau = 1, T = 300):
-    mu, a = theta
+def log_likelihood3(theta, diffusion_object, tau = 1):
+    """
+    Likelihood function for 3D diffusion process of a single particle.
+
+    Parameters:
+        diffusion_object: contains the following:
+            data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
+                where traj_x,traj_y,traj_z are the coordinate positions of the particle
+            sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
+        mu: viscosity of medium
+        a: radius of particle
+        T: temperature
+        tau: time constant (default at 1s)
+        D: diffusion constant; function of a, mu, T
+    """
+    mu, T, a = theta
     data = diffusion_object.data
     sigma = diffusion_object.sigma
     
+    #Delete the first element of the list to make our array sizes match.
     sigma = list(sigma)
     del sigma[0]
     sigma = np.array(sigma)
@@ -152,14 +131,14 @@ def log_likelihood2(theta, diffusion_object, tau = 1, T = 300):
     D = (kb*T)/(6*np.pi*mu*a)
     if D <= 0:
         return -np.inf
-    sigma1 = np.sqrt(3*D*tau)
+    sigma1 = np.sqrt(6*D*tau)
     
     #Turn data into displacements instead of positions
     data = data-data[0]
 
-    #This should give us the delta x_{i,i-1}. point_before is just the data list minus the last element.
-    #data_points is the data list minus the first element.
+    #This should give us the delta x_{i,i-1}. 
     #point_before is the data list minus the last element.
+    #data_points is the data list minus the first element.
     #distance is the measurement of the distance between two consecutive points in the series.
 
     point_before = list(data)
@@ -173,9 +152,9 @@ def log_likelihood2(theta, diffusion_object, tau = 1, T = 300):
     x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
     distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
 
-    #Should be correct with the correct log properties
     result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((sigma1**2+sigma**2)**(-1/2)))+(-((distance)**2)/(2*(sigma1**2+sigma**2))).sum()
     return result
     
-def log_posterior2(theta, diffusion_object):
-    return log_prior2(theta) + log_likelihood2(theta, diffusion_object)
+def log_posterior3(theta, diffusion_object):
+    return log_prior3(theta) + log_likelihood3(theta, diffusion_object)
+
