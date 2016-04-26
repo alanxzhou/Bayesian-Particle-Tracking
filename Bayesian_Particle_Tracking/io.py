@@ -12,10 +12,13 @@ def get_example_data_file_path(filename, data_dir='example_data'):
     # If you need to go up another directory (for example if you have
     # this function in your tests directory and your data is in the
     # package directory one level up) you can use
-    # up_dir = os.path.split(start_dir)[0]
-    data_dir = os.path.join(start_dir, data_dir)
+    up_dir = os.path.split(start_dir)[0]
+    data_dir = os.path.join(up_dir, data_dir)
     return os.path.join(start_dir, data_dir, filename)
 
 new_data = np.load(get_example_data_file_path('test_data.npy', ''))
-
 input_data = model.diffusion(new_data)
+
+#TODO: Evaluate whether or not two separate data sets are actually necessary
+#compare_data = np.load(get_example_data_file_path('compare_data.npy', ''))
+#compare_input = model.diffusion(new_data)
