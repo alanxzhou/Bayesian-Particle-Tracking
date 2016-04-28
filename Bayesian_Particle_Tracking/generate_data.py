@@ -9,7 +9,7 @@ Generates data to test against the model.
 
 Original test data created with the following parameters:
 nsteps = 1000, sigma = 10^-8, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0), T = 300
-(D = 2.19*10^-10)
+(D = 2.1973*10^-10)
 """
 
 def data_generation(a, b, c, d, e, tau = 1):

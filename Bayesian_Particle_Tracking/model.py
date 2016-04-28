@@ -44,6 +44,16 @@ def log_prior(theta):
         return -np.inf
 
 def log_likelihood(theta, diffusion_object, tau = 1):
+    """
+    Likelihood function for 3D diffusion process of a single particle.
+
+    Parameter:
+        diffusion_object: contains the following:
+            data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
+                where traj_x,traj_y,traj_z are the coordinate positions of the particle
+            sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
+        D: diffusion coefficient;
+    """
     D = theta
     
     if D <= 0:
@@ -52,6 +62,7 @@ def log_likelihood(theta, diffusion_object, tau = 1):
     data = diffusion_object.data
     sigma = diffusion_object.sigma
     
+    #Delete the first element of the sigma array to match array sizes
     sigma = list(sigma)
     del sigma[0]
     sigma = np.array(sigma)
@@ -106,9 +117,10 @@ def log_prior3(theta):
 def log_likelihood3(theta, diffusion_object, tau = 1):
     """
     Likelihood function for 3D diffusion process of a single particle.
+    This function differs from the above in that the inputs are mu, a, and T instead of D
 
     Parameters:
-        diffusion_object: contains the following:
+        diffusion_object: contains the following: 
             data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
                 where traj_x,traj_y,traj_z are the coordinate positions of the particle
             sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
@@ -116,7 +128,7 @@ def log_likelihood3(theta, diffusion_object, tau = 1):
         a: radius of particle
         T: temperature
         tau: time constant (default at 1s)
-        D: diffusion constant; function of a, mu, T
+        D: diffusion coefficient; function of a, mu, T
     """
     mu, T, a = theta
     data = diffusion_object.data
