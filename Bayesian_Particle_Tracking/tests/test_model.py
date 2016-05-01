@@ -23,5 +23,10 @@ class TestModel(TestCase):
         self.assertTrue(model.log_prior(theta) !=  -np.inf)
         self.assertTrue(model.log_likelihood(theta, io.get_example_model('test_data.npy')) != -np.inf)
 
+    def test_model_log_likelihood(self):
+        D = 2e-10
+        testdata = io.get_example_model('test_data.npy')
+        self.assertTrue(round(model.log_likelihood(D, testdata)) == 8807)
+
 if __name__ == '__main__':
     unittest.main()

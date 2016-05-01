@@ -13,10 +13,13 @@ nsteps = 1000, sigma = 10^-8, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0)
 """
 
 def data_generation(a, b, c, d, e, tau = 1):
-    
+    """
+    Saves generated data from the generator function as 'test_data' in the current directory.
+
+    Parameters are the same as the generator functino.
+    """
     data = generator(a, b, c, d, e, tau)
     np.save('test_data', data)
-
 
 def generator(nsteps, sigma, mu, a, initial_coordinate, T = 300, nwalkers = 1, tau = 1):
     """

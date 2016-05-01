@@ -16,10 +16,6 @@ def get_example_data_file_path(filename, data_dir='example_data'):
     data_dir = os.path.join(up_dir, data_dir)
     return os.path.join(start_dir, data_dir, filename)
 
-def get_example_model(filename):
-    new_data = np.load(get_example_data_file_path('test_data.npy', ''))
+def get_example_model(data):
+    new_data = np.load(get_example_data_file_path(data, ''))
     return model.diffusion(new_data)
-
-#TODO: Evaluate whether or not two separate data sets are actually necessary
-#compare_data = np.load(get_example_data_file_path('compare_data.npy', ''))
-#compare_input = model.diffusion(new_data)
