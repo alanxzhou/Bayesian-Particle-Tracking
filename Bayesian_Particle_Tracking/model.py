@@ -6,6 +6,24 @@ from Bayesian_Particle_Tracking.printable import Printable
 from Bayesian_Particle_Tracking.prior import JeffreysPrior
 from Bayesian_Particle_Tracking.prior import UniformPrior
 
+def displacement(data):
+    """
+    This returns the displacement between successive points for a data set of positions.
+        data: size 3 x n array
+            positional data input in cartesian coordinates (x,y,z)
+    """
+    #point_before is the data list minus the last element.
+    #data_points is the data list minus the first element.
+    #distance is array containing the displacements between two consecutive points in the series.
+    #Using np.diff seems to run a lot slower than the following 5 lines:
+    data_length = len(data)
+    point_before = data[:data_length-1]
+    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
+    data_points = data[1:]
+    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
+    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
+    return distance
+
 class diffusion(Printable):
     '''
     Contains data and relevent parameters for a 3-D Diffusion Process
@@ -20,8 +38,6 @@ class diffusion(Printable):
         number of steps taken in diffusion process
     position: length 3 listlike
         initial position
-    nwalkers: integer
-        number of particles being tracked. TO BE IMPLEMENTED
     '''
     def __init__(self, data, nwalkers = 1):
         self.data = data
@@ -37,93 +53,91 @@ class diffusion(Printable):
         return diffusion(np.array((self.x+offset, self.y+offset, self.z+offset, self.sigma)).T)
 
 
-def log_prior(theta, lower_bound = 10**(-12), upper_bound = 10**(-8)):
+def log_prior(theta, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"):
     """
-    Log prior function for 3D diffusion process of a single particle
+    Log prior function for 3D diffusion process of a single particle.
+    Default prior is a Jeffreys prior with lower bound at 1e-12 and upper bound at 1e-8
 
-    Parameters:
+    Parameters
+    ----------
         D: diffusion coefficient
-        lower_bound: lower_bound of JeffreysPrior
-        upper_bound: upper_bound of JeffreysPrior
+        lower_bound: lower_bound of Prior
+        upper_bound: upper_bound of Prior
     """
-    theta_prior = JeffreysPrior(lower_bound, upper_bound).lnprob(theta)
+    if prior == "Jeffreys":
+        theta_prior = JeffreysPrior(lower_bound, upper_bound).lnprob(theta)
+    elif prior == "Uniform":
+        theta_prior = UniformPrior(lower_bound, upper_bound).lnprob(theta)
+    else:
+        raise ValueError("Prior not recognized. ")
     return theta_prior
 
-def log_likelihood(theta, diffusion_object, tau = 1, parameter = 'D', known_variables = []):
+def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variables = None):
     """
     Likelihood function for 3D diffusion process of a single particle.
 
-    Parameters:
+    Parameters
+    ----------
         diffusion_object: contains the following:
             data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
                 where traj_x,traj_y,traj_z are the coordinate positions of the particle
             sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
         theta: unknown parameter;
-        parameter: The unknown parameter to be determined. Default is D. The possible parameters are:
+        unknown: The unknown parameter to be determined. Default is D. Must be input as string. Possible parameters are:
             D: diffusion coefficient
             a: radius of particle
             mu: dynamic viscosity of medium
             T: temperature of medium
+        known_variables: Given as a tuple (a,b), where a and b are known values for the two unknown parameters if the uknown parameter is not D.
+            For the following unknown parameters, the tuple (a,b) should be given as follows:
+                a: (mu, T)
+                mu: (a, T)
+                T: (a, mu)
     """
-    if parameter == 'D':
+    if unknown == 'D':
         D = theta
-    elif parameter != 'D':
-        if parameter == 'a':
+    elif unknown != 'D':
+        kb = 1.38e-23
+        if unknown == 'a':
             a = theta
             mu, T = known_variables
-            kb = 1.38*10**(-23)
             D = (kb*T)/(6*np.pi*mu*a)
-        elif parameter == 'mu':
+        elif unknown == 'mu':
             mu = theta
             a, T = known_variables
-            kb = 1.38*10**(-23)
             D = (kb*T)/(6*np.pi*mu*a)
-        elif parameter == 'T':
+        elif unknown == 'T':
             T = theta
             a, mu = known_variables
-            kb = 1.38*10**(-23)
             D = (kb*T)/(6*np.pi*mu*a)
+        elif isinstance(unkonwn, str):
+            raise ValueError('%s is not a valid parameter. Valid parameters are D, a, mu, T.' %unknown)
         else:
-            raise ValueError('%s is not a valid parameter. Valid parameters are D, a, mu, T' %parameter)
+            raise TypeError('%s is not a string. Valid parameters are D, a, mu, T.' %unknown)
 
     data = diffusion_object.data
     sigma = diffusion_object.sigma
+    distance = displacement(data)
     
     #Delete the first element of the sigma array to match array sizes
-    sigma = sigma[:len(sigma)-1]
+    sigma = sigma[1:len(sigma)]
     
-    #TODO: rename
-    sigma1 = np.sqrt(6*D*tau)
-    
-    #This should give us the delta x_{i,i-1}. 
-    #point_before is the data list minus the last element.
-    #data_points is the data list minus the first element.
-    #distance is array containing the displacements between two consecutive points in the series.
-    #TODO: Using np.diff seems to run a lot slower than the following 5 lines:
+    diffusion_factor = np.sqrt(6*D*tau)
 
-    point_before = data[:len(data)-1]
-    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
-    data_points = data[1:]
-    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
-    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
-
-    #Should be correct with the correct log properties
-    result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((sigma1**2+sigma**2)**(-1/2)))+np.sum(-((distance)**2)/(2*(sigma1**2+sigma**2)))
+    result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((diffusion_factor**2+sigma**2)**(-1/2)))+np.sum(-((distance)**2)/(2*(diffusion_factor**2+sigma**2)))
     return result
     
-def log_posterior(theta, diffusion_object, low_bound = 10**(-12), high_bound = 10**(-8), time_constant = 1, param = 'D', known = []):
-    prior = log_prior(theta, lower_bound = low_bound, upper_bound = high_bound)
+def log_posterior(theta, diffusion_object, tau = 1, unknown = 'D', known_variables = None, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"):
+    """
+    Log posterior function for 3D diffusion process of a single particle. 
+
+    Parameters are given by parameters in log_likelihood() function and log_prior() function
+        theta, diffusion_object, tau, unknown, known_variables given are parameters of log_likelihood()
+        lower_bound, upper_bound, Jeffreys given are parameters of log_prior function
+
+    """
+    prior = log_prior(theta, lower_bound = lower_bound, upper_bound = upper_bound, prior = "Jeffreys")
     if prior == -np.inf:
         return prior
-    return prior + log_likelihood(theta, diffusion_object, tau = time_constant, parameter = param, known_variables = known)
-
-def sq_displacement(data):
-    data_length = len(data)
-    point_before = data[:len(data)-1]
-    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
-
-    data_points = data[1:]
-    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
-    distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
-    return distance**2
+    return prior + log_likelihood(theta, diffusion_object, tau = tau, unknown = unknown, known_variables = known_variables)
 
