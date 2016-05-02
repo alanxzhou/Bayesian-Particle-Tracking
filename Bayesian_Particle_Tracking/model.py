@@ -12,15 +12,29 @@ def displacement(data):
         data: size 3 x n array
             positional data input in cartesian coordinates (x,y,z)
     """
-    #point_before is the data list minus the last element.
-    #data_points is the data list minus the first element.
-    #distance is array containing the displacements between two consecutive points in the series.
-    #Using np.diff seems to run a lot slower than the following 5 lines:
+
+    ndim = data.shape[1]-1
+
+    #The lines below copy the array and subtract the first element, and then do the same thing but subtract the last element.
+    #For some reason, this runs much faster than np.diff()
     data_length = len(data)
     point_before = data[:data_length-1]
-    x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
     data_points = data[1:]
-    x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
+
+    y_before, y_data, z_before, z_data = 0, 0, 0, 0
+
+    if ndim == 1:
+        x_before = point_before[:,0]
+        x_data = data_points[:,0]
+    if ndim == 2:
+        x_before, y_before = point_before[:,0], point_before[:,1]
+        x_data, y_data = data_points[:,0], data_points[:,1]
+    if ndim == 3:
+        x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
+        x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
+
+    ndim = data.shape[1]
+
     distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
     return distance
 
@@ -39,14 +53,23 @@ class diffusion(Printable):
     position: length 3 listlike
         initial position
     '''
-    def __init__(self, data, nwalkers = 1):
+    def __init__(self, data):
         self.data = data
         self.n = len(data)
-        self.initial_position = data[0]
-        self.x = data[:,0]
-        self.y = data[:,1]
-        self.z = data[:,2]
-        self.sigma = data[:,3]
+        self.initial_position = data[0:]
+        self.dim = data.shape[1] - 1
+        if self.dim < 1 or self.dim > 3:
+            raise ValueError('Number of dimensions should be either 1, 2, or 3.')
+        if self.dim == 1:
+            self.x = data[:,0]
+        elif self.dim == 2:
+            self.x = data[:,0]
+            self.y = data[:,1]
+        elif self.dim == 3:
+            self.x = data[:,0]
+            self.y = data[:,1]
+            self.z = data[:,2]
+        self.sigma = data[:,-1]
     
     #Allows translation of the object
     def translate(self, offset):
@@ -94,6 +117,11 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
                 mu: (a, T)
                 T: (a, mu)
     """
+    data = diffusion_object.data
+    ndim = diffusion_object.dim
+    sigma = diffusion_object.sigma
+    distance = displacement(data)
+
     if unknown == 'D':
         D = theta
     elif unknown != 'D':
@@ -101,28 +129,26 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
         if unknown == 'a':
             a = theta
             mu, T = known_variables
-            D = (kb*T)/(6*np.pi*mu*a)
+            D = (kb*T)/(2*ndim*np.pi*mu*a)
         elif unknown == 'mu':
             mu = theta
             a, T = known_variables
-            D = (kb*T)/(6*np.pi*mu*a)
+            D = (kb*T)/(2*nim*np.pi*mu*a)
         elif unknown == 'T':
             T = theta
             a, mu = known_variables
-            D = (kb*T)/(6*np.pi*mu*a)
+            D = (kb*T)/(2*ndim*np.pi*mu*a)
         elif isinstance(unkonwn, str):
             raise ValueError('%s is not a valid parameter. Valid parameters are D, a, mu, T.' %unknown)
         else:
             raise TypeError('%s is not a string. Valid parameters are D, a, mu, T.' %unknown)
-
-    data = diffusion_object.data
-    sigma = diffusion_object.sigma
-    distance = displacement(data)
     
     #Delete the first element of the sigma array to match array sizes
-    sigma = sigma[1:len(sigma)]
-    
-    diffusion_factor = np.sqrt(6*D*tau)
+    sigma1 = sigma[1:len(sigma)]
+    sigma2 = sigma[:len(sigma)-1]
+    sigma = np.sqrt(sigma1**2+sigma2**2)
+
+    diffusion_factor = np.sqrt(2*ndim*D*tau)
 
     result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((diffusion_factor**2+sigma**2)**(-1/2)))+np.sum(-((distance)**2)/(2*(diffusion_factor**2+sigma**2)))
     return result
