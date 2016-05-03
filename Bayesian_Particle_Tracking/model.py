@@ -9,7 +9,7 @@ from Bayesian_Particle_Tracking.prior import UniformPrior
 def displacement(data):
     """
     This returns the displacement between successive points for a data set of positions.
-        data: size 3 x n array
+        data: size m x n array where m can be 1, 2, or 3
             positional data input in cartesian coordinates (x,y,z)
     """
 
@@ -96,7 +96,7 @@ def log_prior(theta, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"
         raise ValueError("Prior not recognized. ")
     return theta_prior
 
-def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variables = None):
+def log_likelihood(theta, diffusion_object, unknown = 'D', known_variables = None):
     """
     Likelihood function for 3D diffusion process of a single particle.
 
@@ -152,7 +152,6 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
     sigma2 = sigma[:len(sigma)-1]
     sigma = np.sqrt(sigma1**2+sigma2**2)
 
-
     diffusion_factor = np.sqrt(2*ndim*D*tau)
 
     result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((diffusion_factor**2+sigma**2)**(-1/2)))+np.sum(-((distance)**2)/(2*(diffusion_factor**2+sigma**2)))
@@ -172,3 +171,27 @@ def log_posterior(theta, diffusion_object, unknown = 'D', known_variables = None
         return prior
     return prior + log_likelihood(theta, diffusion_object, unknown = unknown, known_variables = known_variables)
 
+def max_likelihood_estimation(data, lower_bound, upper_bound, intervals):
+    """
+    Maximum Likelihood estimation for diffusion coefficient for a basic diffusion process.
+
+    Parameters
+    ----------
+    data: diffusion_object
+    lower_bound: log_10 of lower_bound of likelihood
+    upper_bound: log_10 of upper_bound of likelihood
+    intervals: number of intervals in logspace between lower_bound and upper_bound
+
+    Outputs
+    -------
+    D: entire logspace of possible D's tested
+    D[maxindex]: most likely value of D from max_likelihood_estimation
+    loglikelihood: all values of loglikelihood across D
+    D_range.min(): minimum value of D in 68 percent confidence interval
+    D_range.max(): maximum value of D in 68 percent confidence interval
+    """
+    D = np.logspace(lower_bound, upper_bound, intervals)
+    loglikelihood = np.array(list(map(lambda d: log_likelihood(d, data), D)))
+    maxindex = np.argmax(loglikelihood)
+    D_range = D[loglikelihood > (loglikelihood.max() - 0.5)]
+    return D, D[maxindex], loglikelihood, D_range.min(), D_range.max()

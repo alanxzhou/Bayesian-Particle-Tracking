@@ -76,7 +76,7 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
         x = r
 
         traj_x = np.cumsum(x) + x_noise + x_init
-        return(np.array((traj_x, sigmaarray)).T)
+        return(np.array((traj_x, sigmaarray, tau_array)).T)
     elif ndim == 2:
         x_noise = r_noise*np.cos(phi_noise)
         y_noise = r_noise*np.sin(phi_noise)
@@ -85,7 +85,7 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
 
         traj_x = np.cumsum(x) + x_noise + x_init
         traj_y = np.cumsum(y) + y_noise + y_init
-        return(np.array((traj_x, traj_y, sigmaarray)).T)
+        return(np.array((traj_x, traj_y, sigmaarray, tau_array)).T)
     elif ndim == 3:
         x_noise = r_noise*np.sin(theta_noise)*np.cos(phi_noise)
         y_noise = r_noise*np.sin(theta_noise)*np.sin(phi_noise)

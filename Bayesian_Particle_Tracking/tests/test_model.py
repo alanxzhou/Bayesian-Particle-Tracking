@@ -11,12 +11,12 @@ Unit tests for model
 class TestModel(TestCase):
     def test_model_is_number(self):
         data = list(io.get_example_model('test_data.npy').data)
-        self.assertTrue(isinstance(data, list))
+        self.assertTrue(isinstance(data, list)),
 
     def test_model_object_works(self):
         testdata = io.get_example_model('test_data.npy')
         self.assertTrue(isinstance(testdata.n, int))
-        self.assertTrue(len(testdata.data[0])==4)
+        self.assertTrue(len(testdata.data[0])==5)
 
     def test_model_positive_parameters(self):
         theta = (2*10**(-10))
@@ -26,7 +26,7 @@ class TestModel(TestCase):
     def test_model_log_likelihood(self):
         D = 2e-10
         testdata = io.get_example_model('test_data.npy')
-        self.assertTrue(round(model.log_likelihood(D, testdata)) == 8807)
+        self.assertTrue(round(model.log_likelihood(D, testdata)) == 88024)
 
 if __name__ == '__main__':
     unittest.main()
