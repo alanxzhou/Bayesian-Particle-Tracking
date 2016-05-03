@@ -13,7 +13,7 @@ def displacement(data):
             positional data input in cartesian coordinates (x,y,z)
     """
 
-    ndim = data.shape[1]-1
+    ndim = data.shape[1]-2
 
     #The lines below copy the array and subtract the first element, and then do the same thing but subtract the last element.
     #For some reason, this runs much faster than np.diff()
@@ -57,7 +57,7 @@ class diffusion(Printable):
         self.data = data
         self.n = len(data)
         self.initial_position = data[0:]
-        self.dim = data.shape[1] - 1
+        self.dim = data.shape[1] - 2
         if self.dim < 1 or self.dim > 3:
             raise ValueError('Number of dimensions should be either 1, 2, or 3.')
         if self.dim == 1:
@@ -69,7 +69,8 @@ class diffusion(Printable):
             self.x = data[:,0]
             self.y = data[:,1]
             self.z = data[:,2]
-        self.sigma = data[:,-1]
+        self.sigma = data[:,-2]
+        self.tau = data[:,-1]
     
     #Allows translation of the object
     def translate(self, offset):
@@ -102,9 +103,10 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
     Parameters
     ----------
         diffusion_object: contains the following:
-            data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z)
+            data: positional data: assumes data is in the form of column vectors (traj_x,traj_y,traj_z,sigma,tau)
                 where traj_x,traj_y,traj_z are the coordinate positions of the particle
-            sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
+                sigma: variance on positional data; we assume the uncertainty is Gaussian; true dependency will be from raw image data
+                tau: lag time
         theta: unknown parameter;
         unknown: The unknown parameter to be determined. Default is D. Must be input as string. Possible parameters are:
             D: diffusion coefficient
@@ -120,6 +122,8 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
     data = diffusion_object.data
     ndim = diffusion_object.dim
     sigma = diffusion_object.sigma
+    tau = diffusion_object.tau
+    tau = tau[1:len(tau)]
     distance = displacement(data)
 
     if unknown == 'D':
@@ -148,22 +152,23 @@ def log_likelihood(theta, diffusion_object, tau = 1, unknown = 'D', known_variab
     sigma2 = sigma[:len(sigma)-1]
     sigma = np.sqrt(sigma1**2+sigma2**2)
 
+
     diffusion_factor = np.sqrt(2*ndim*D*tau)
 
     result = (-len(data)/2)*np.log(2*np.pi)+np.sum(np.log((diffusion_factor**2+sigma**2)**(-1/2)))+np.sum(-((distance)**2)/(2*(diffusion_factor**2+sigma**2)))
     return result
     
-def log_posterior(theta, diffusion_object, tau = 1, unknown = 'D', known_variables = None, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"):
+def log_posterior(theta, diffusion_object, unknown = 'D', known_variables = None, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"):
     """
     Log posterior function for 3D diffusion process of a single particle. 
 
     Parameters are given by parameters in log_likelihood() function and log_prior() function
-        theta, diffusion_object, tau, unknown, known_variables given are parameters of log_likelihood()
+        theta, diffusion_object, unknown, known_variables given are parameters of log_likelihood()
         lower_bound, upper_bound, Jeffreys given are parameters of log_prior function
 
     """
     prior = log_prior(theta, lower_bound = lower_bound, upper_bound = upper_bound, prior = "Jeffreys")
     if prior == -np.inf:
         return prior
-    return prior + log_likelihood(theta, diffusion_object, tau = tau, unknown = unknown, known_variables = known_variables)
+    return prior + log_likelihood(theta, diffusion_object, unknown = unknown, known_variables = known_variables)
 

@@ -44,6 +44,7 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
     
     Note that D is the diffusion coefficient and is a function of a, mu, T given by the Stokes-Einsten Equation
     """
+    x_init, y_init, z_init = initial_coordinate
 
     if parameter == "D":
         D = theta
@@ -68,12 +69,13 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
     phi = uniform(0,2*np.pi,nsteps)
 
     sigmaarray = np.ones(nsteps)*sigma
+    tau_array = np.ones(nsteps)*tau
 
     if ndim == 1:
         x_noise = r_noise
         x = r
 
-        traj_x = np.cumsum(x) + x_noise
+        traj_x = np.cumsum(x) + x_noise + x_init
         return(np.array((traj_x, sigmaarray)).T)
     elif ndim == 2:
         x_noise = r_noise*np.cos(phi_noise)
@@ -81,8 +83,8 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
         x = r*np.cos(phi)
         y = r*np.sin(phi)
 
-        traj_x = np.cumsum(x) + x_noise
-        traj_y = np.cumsum(y) + y_noise
+        traj_x = np.cumsum(x) + x_noise + x_init
+        traj_y = np.cumsum(y) + y_noise + y_init
         return(np.array((traj_x, traj_y, sigmaarray)).T)
     elif ndim == 3:
         x_noise = r_noise*np.sin(theta_noise)*np.cos(phi_noise)
@@ -92,13 +94,8 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
         y = r*np.sin(theta)*np.sin(phi)
         z = r*np.cos(theta)
 
-        traj_x = np.cumsum(x) + x_noise
-        traj_y = np.cumsum(y) + y_noise
-        traj_z = np.cumsum(z) + z_noise
+        traj_x = np.cumsum(x) + x_noise + x_init
+        traj_y = np.cumsum(y) + y_noise + y_init
+        traj_z = np.cumsum(z) + z_noise + z_init
 
-        return(np.array((traj_x, traj_y, traj_z, sigmaarray)).T)
-
-#TODO: remove this
-#x_noise = normal(0, sigma * np.sqrt(3), nsteps)
-#y_noise = normal(0, sigma * np.sqrt(3), nsteps)
-#z_noise = normal(0, sigma * np.sqrt(3), nsteps)
+        return(np.array((traj_x, traj_y, traj_z, sigmaarray, tau_array)).T)
