@@ -101,6 +101,7 @@ def log_prior(theta, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"
         theta_prior = JeffreysPrior(lower_bound, upper_bound).lnprob(theta)
     elif prior == "Uniform":
         theta_prior = UniformPrior(lower_bound, upper_bound).lnprob(theta)
+    #Putting in different priors is possible.
     else:
         raise ValueError("Prior not recognized. ")
     return theta_prior
