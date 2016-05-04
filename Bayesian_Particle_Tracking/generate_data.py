@@ -1,16 +1,7 @@
 import numpy as np
 from numpy.random import normal
 from numpy.random import uniform
-import scipy
 import os
-
-"""
-Generates data to test against the model.
-
-Original test data created with the following parameters:
-nsteps = 1000, sigma = 10^-8, mu = 10^-4, a = 10^-8, intial_coordinate = (0,0,0), T = 300
-(D = 2.1973*10^-10)
-"""
 
 def data_generation(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parameter = None, ndim = 3):
     """

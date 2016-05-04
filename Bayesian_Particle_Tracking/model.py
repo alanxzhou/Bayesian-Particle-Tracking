@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.random import normal
 from numpy.random import uniform
-import scipy
 from Bayesian_Particle_Tracking.printable import Printable
 from Bayesian_Particle_Tracking.prior import JeffreysPrior
 from Bayesian_Particle_Tracking.prior import UniformPrior
@@ -9,14 +8,22 @@ from Bayesian_Particle_Tracking.prior import UniformPrior
 def displacement(data):
     """
     This returns the displacement between successive points for a data set of positions.
-        data: size m x n array where m can be 1, 2, or 3
-            positional data input in cartesian coordinates (x,y,z)
+
+    Parameter
+    ---------
+    data: size m x n array where m can be 1, 2, or 3
+        positional data input in cartesian coordinates (x,y,z)
+
+    Returns
+    -------
+    distance : 1 x n-1 array
+        containins n-1 displacement measurments for n positional points
     """
 
     ndim = data.shape[1]-2
 
     #The lines below copy the array and subtract the first element, and then do the same thing but subtract the last element.
-    #For some reason, this runs much faster than np.diff()
+    #For some reason, this runs faster than np.diff()
     data_length = len(data)
     point_before = data[:data_length-1]
     data_points = data[1:]
@@ -26,21 +33,24 @@ def displacement(data):
     if ndim == 1:
         x_before = point_before[:,0]
         x_data = data_points[:,0]
-    if ndim == 2:
+    elif ndim == 2:
         x_before, y_before = point_before[:,0], point_before[:,1]
         x_data, y_data = data_points[:,0], data_points[:,1]
-    if ndim == 3:
+    elif ndim == 3:
         x_before, y_before, z_before = point_before[:,0], point_before[:,1], point_before[:,2]
         x_data, y_data, z_data = data_points[:,0], data_points[:,1], data_points[:,2]
-
-    ndim = data.shape[1]
 
     distance = np.sqrt((x_before-x_data)**2+(y_before-y_data)**2+(z_before-z_data)**2)
     return distance
 
 class diffusion(Printable):
     '''
-    Contains data and relevent parameters for a 3-D Diffusion Process
+    Contains data and relevent parameters for a 3-D Diffusion Process.
+
+    TODO: Pandas dataframe may be better, since there are only a couple of advantages to the class:
+        self.dim: checking dimensionality of the process
+        translate: translation funciton in the object allows for check that translation does effect output. No other use otherwise
+    Pandas dataframe offers the key advantage of labeled columns although to be fair, we can still look at columns by name here.
 
     Attributes
     ----------
@@ -48,14 +58,13 @@ class diffusion(Printable):
         positional data input in cartesian coordinates (x,y,z)
     sigma: nonzero float
         specifies measurement uncertainty on measurement of particle position
-    n : integer
-        number of steps taken in diffusion process
+    ndim : integer
+        number of dimensions
     position: length 3 listlike
         initial position
     '''
     def __init__(self, data):
         self.data = data
-        self.n = len(data)
         self.initial_position = data[0:]
         self.dim = data.shape[1] - 2
         if self.dim < 1 or self.dim > 3:
@@ -122,6 +131,8 @@ def log_likelihood(theta, diffusion_object, unknown = 'D', known_variables = Non
     data = diffusion_object.data
     ndim = diffusion_object.dim
     sigma = diffusion_object.sigma
+
+    #This code assumes the tau in the diffusion_object is given as time displacement from last point rather than cumulative time.
     tau = diffusion_object.tau
     tau = tau[1:len(tau)]
     distance = displacement(data)
@@ -147,7 +158,7 @@ def log_likelihood(theta, diffusion_object, unknown = 'D', known_variables = Non
         else:
             raise TypeError('%s is not a string. Valid parameters are D, a, mu, T.' %unknown)
     
-    #Delete the first element of the sigma array to match array sizes
+    #sigma is the error on the displacement. This comes from the error propogation terms in the positional measurments, sigma1 and sigma2.
     sigma1 = sigma[1:len(sigma)]
     sigma2 = sigma[:len(sigma)-1]
     sigma = np.sqrt(sigma1**2+sigma2**2)
@@ -170,28 +181,3 @@ def log_posterior(theta, diffusion_object, unknown = 'D', known_variables = None
     if prior == -np.inf:
         return prior
     return prior + log_likelihood(theta, diffusion_object, unknown = unknown, known_variables = known_variables)
-
-def max_likelihood_estimation(data, lower_bound, upper_bound, intervals):
-    """
-    Maximum Likelihood estimation for diffusion coefficient for a basic diffusion process.
-
-    Parameters
-    ----------
-    data: diffusion_object
-    lower_bound: log_10 of lower_bound of likelihood
-    upper_bound: log_10 of upper_bound of likelihood
-    intervals: number of intervals in logspace between lower_bound and upper_bound
-
-    Outputs
-    -------
-    D: entire logspace of possible D's tested
-    D[maxindex]: most likely value of D from max_likelihood_estimation
-    loglikelihood: all values of loglikelihood across D
-    D_range.min(): minimum value of D in 68 percent confidence interval
-    D_range.max(): maximum value of D in 68 percent confidence interval
-    """
-    D = np.logspace(lower_bound, upper_bound, intervals)
-    loglikelihood = np.array(list(map(lambda d: log_likelihood(d, data), D)))
-    maxindex = np.argmax(loglikelihood)
-    D_range = D[loglikelihood > (loglikelihood.max() - 0.5)]
-    return D, D[maxindex], loglikelihood, D_range.min(), D_range.max()
