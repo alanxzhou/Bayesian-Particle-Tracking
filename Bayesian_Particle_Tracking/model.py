@@ -78,12 +78,12 @@ class diffusion(Printable):
             self.x = data[:,0]
             self.y = data[:,1]
             self.z = data[:,2]
-        self.sigma = data[:,-2]
-        self.tau = data[:,-1]
+        self.sigma_m = data[:,-2]
+        self.time = data[:,-1]
     
     #Allows translation of the object
     def translate(self, offset):
-        return diffusion(np.array((self.x+offset, self.y+offset, self.z+offset, self.sigma)).T)
+        return diffusion(np.array((self.x+offset, self.y+offset, self.z+offset, self.sigma_m, selt.time)).T)
 
 
 def log_prior(theta, lower_bound = 1e-12, upper_bound = 1e-8, prior = "Jeffreys"):
@@ -130,11 +130,11 @@ def log_likelihood(theta, diffusion_object, unknown = 'D', known_variables = Non
     """
     data = diffusion_object.data
     ndim = diffusion_object.dim
-    sigma = diffusion_object.sigma
+    sigma_m = diffusion_object.sigma_m
 
-    #This code assumes the tau in the diffusion_object is given as time displacement from last point rather than cumulative time.
-    tau = diffusion_object.tau
-    tau = tau[1:len(tau)]
+    #This code assumes the diffusion obeject gives absolute time instead of time displacements
+    time = diffusion_object.time
+    tau = time[1:len(time)] - time[0:len(time)-1]
     distance = displacement(data)
 
     if unknown == 'D':
@@ -159,9 +159,9 @@ def log_likelihood(theta, diffusion_object, unknown = 'D', known_variables = Non
             raise TypeError('%s is not a string. Valid parameters are D, a, mu, T.' %unknown)
     
     #sigma is the error on the displacement. This comes from the error propogation terms in the positional measurments, sigma1 and sigma2.
-    sigma1 = sigma[1:len(sigma)]
-    sigma2 = sigma[:len(sigma)-1]
-    sigma = np.sqrt(sigma1**2+sigma2**2)
+    sigma_1 = sigma_m[1:len(sigma_m)]
+    sigma_2 = sigma_m[:len(sigma_m)-1]
+    sigma = np.sqrt(sigma_1**2+sigma_2**2)
 
     diffusion_factor = np.sqrt(2*ndim*D*tau)
 

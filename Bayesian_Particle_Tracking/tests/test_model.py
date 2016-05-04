@@ -15,7 +15,6 @@ class TestModel(TestCase):
 
     def test_model_object_works(self):
         testdata = io.get_example_model('test_data.npy')
-        self.assertTrue(isinstance(testdata.n, int))
         self.assertTrue(len(testdata.data[0])==5)
 
     def test_model_positive_parameters(self):

@@ -61,13 +61,14 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
 
     sigmaarray = np.ones(nsteps)*sigma
     tau_array = np.ones(nsteps)*tau
+    time = np.cumsum(tau_array)-tau
 
     if ndim == 1:
         x_noise = r_noise
         x = r
 
         traj_x = np.cumsum(x) + x_noise + x_init
-        return(np.array((traj_x, sigmaarray, tau_array)).T)
+        return(np.array((traj_x, sigmaarray, time)).T)
     elif ndim == 2:
         x_noise = r_noise*np.cos(phi_noise)
         y_noise = r_noise*np.sin(phi_noise)
@@ -76,7 +77,7 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
 
         traj_x = np.cumsum(x) + x_noise + x_init
         traj_y = np.cumsum(y) + y_noise + y_init
-        return(np.array((traj_x, traj_y, sigmaarray, tau_array)).T)
+        return(np.array((traj_x, traj_y, sigmaarray, time)).T)
     elif ndim == 3:
         x_noise = r_noise*np.sin(theta_noise)*np.cos(phi_noise)
         y_noise = r_noise*np.sin(theta_noise)*np.sin(phi_noise)
@@ -89,4 +90,4 @@ def generator(nsteps, sigma, theta, initial_coordinate, T = 300, tau = 1, parame
         traj_y = np.cumsum(y) + y_noise + y_init
         traj_z = np.cumsum(z) + z_noise + z_init
 
-        return(np.array((traj_x, traj_y, traj_z, sigmaarray, tau_array)).T)
+        return(np.array((traj_x, traj_y, traj_z, sigmaarray, time)).T)
