@@ -1,4 +1,4 @@
-# Bayesian-Particle-Tracking
+# Bayesian Particle Tracking
 
 Background: Accurate estimation of the diffusion coefficient and its uncertainty is important in adequately understanding any diffusion process. From a calculation of the diffusion coefficient, one can directly determine properties of the particle (size) or of the medium (dynamic viscosity). There does not seem to exist a standard accepted procedure for calculating the diffusion coefficient. Current methods are very ad hoc and can be improved upon. 
 
@@ -41,5 +41,9 @@ Data: The package tutorial uses simulated data to demonstrate its efficacy. This
 
 - prior.py: a module that contains prior classes for jeffreys and uniform priors.
 
-
 ## In Progress
+- finding a way to work around computational limits on evaluating the likelihood function in marginalization
+
+- accounting for particle motion beyond purely diffusive motion in the model
+
+- converting the module to use pandas instead of the custom 'diffusion' class
