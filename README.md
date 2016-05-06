@@ -22,6 +22,10 @@ The package tutorial uses simulated data to demonstrate its efficacy. This is be
 
 The package also uses real data provided in a pandas data provided by Viva Horowitz.
 
+## Installation
+
+This package can be installed by cloning the repository via the terminal ("git clone https://github.com/p201-sp22016/Bayesian-Particle-Tracking") and then running "python setup.py install" inside the root directory.
+
 ## Files:
 
 - Model.ipynb: a jupyter notebook containing the mathematical details of the statistical models and the appliaction of analyses to a short test data set, test_data.npy.
