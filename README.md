@@ -54,3 +54,16 @@ This package can be installed by cloning the repository via the terminal ("git c
 - accounting for particle motion beyond purely diffusive motion in the model
 
 - converting the module to use pandas instead of the custom 'diffusion' class
+
+## License:
+GNU General Public License
+
+## Author:
+Alan Zhou
+
+## Acknowledgements:
+Thanks to Vinny and Tom (Harvard University) for teaching me python and statistical analysis basically from scratch.
+
+Thanks to Viva Horowitz (Harvard University) for providing me with real data to run my analysis on and verify my model.
+
+Thanks to Maya, Miles, and Tom for greatly improving my code through pull requests.
