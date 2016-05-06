@@ -24,7 +24,7 @@ The package also uses real data provided in a pandas data provided by Viva Horow
 
 ## Installation
 
-This package can be installed by cloning the repository via the terminal ("git clone https://github.com/p201-sp22016/Bayesian-Particle-Tracking") and then running "python setup.py install" inside the root directory.
+This package can be installed by cloning the repository via the terminal ("git clone https://github.com/p201-sp2016/Bayesian-Particle-Tracking") and then running "python setup.py install" inside the root directory.
 
 ## Files:
 
