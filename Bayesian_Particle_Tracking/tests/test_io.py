@@ -9,7 +9,7 @@ class Test_io(TestCase):
         data = list(io.get_example_model('test_data.npy').data)
         self.assertTrue(isinstance(data, list)),
 
-    def test_model_object_works(self):
+    def test_length(self):
         testdata = io.get_example_model('test_data.npy')
         self.assertTrue(len(testdata.data[0])==5)
 
