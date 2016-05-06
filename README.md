@@ -4,7 +4,7 @@ Background: Accurate estimation of the diffusion coefficient and its uncertainty
 
 With a generative model for the data, the diffusion coefficient, and its uncertainty can be accurately measured in a number of ways. This package is designed to allow bayesian analysis of particle tracking data. Specifically, it allows estimations of the diffusion coefficient for a diffusion process in 3D particle tracking given a trajectory and the uncertainty on the measurments in that trajectory.
 
-Parameters in determining trajectory of a 3D Diffusion Process:
+### Parameters:
 
 sigma: uncertainty in measurement on position
 
@@ -17,7 +17,10 @@ T: temperature
 D: diffusion coefficient; this is a function of mu, a, and T. Specifically by Stokes-Einsten:
 D = kb*T/(6*pi*mu*a)
 
-Data: The package tutorial uses simulated data to demonstrate its efficacy. This is because it is much easier to demonstrate efficacy when the desired answer is known.
+### Data: 
+The package tutorial uses simulated data to demonstrate its efficacy. This is because it is much easier to demonstrate efficacy when the desired answer is known.
+
+The package also uses real data provided in a pandas data provided by Viva Horowitz.
 
 ## Files:
 
